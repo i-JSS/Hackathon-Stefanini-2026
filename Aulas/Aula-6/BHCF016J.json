@@ -1,0 +1,93 @@
+{
+ "participantes": [
+ {
+  "codigo": "00001",
+  "nome": "ANA SILVA",
+  "uf": "SP",
+  "trilha": "COBOL",
+  "situacao": "ATIVO",
+  "data": "20260701"
+ }
+,
+ {
+  "codigo": "00002",
+  "nome": "BRUNO LIMA",
+  "uf": "RJ",
+  "trilha": "COBOL",
+  "situacao": "ATIVO",
+  "data": "20260701"
+ }
+,
+ {
+  "codigo": "00003",
+  "nome": "",
+  "uf": "MG",
+  "trilha": "JCL",
+  "situacao": "ATIVO",
+  "data": "20260701"
+ }
+,
+ {
+  "codigo": "00004",
+  "nome": "DANIEL COSTA",
+  "uf": "BA",
+  "trilha": "COBOL",
+  "situacao": "ATIVO",
+  "data": "20260701"
+ }
+,
+ {
+  "codigo": "00005",
+  "nome": "ELISA ROCHA",
+  "uf": "",
+  "trilha": "DB2",
+  "situacao": "ATIVO",
+  "data": "20260701"
+ }
+,
+ {
+  "codigo": "00006",
+  "nome": "FERNANDO ALVES",
+  "uf": "SC",
+  "trilha": "VSAM",
+  "situacao": "ATIVO",
+  "data": "20260701"
+ }
+,
+ {
+  "codigo": "00007",
+  "nome": "GABRIELA NUNES",
+  "uf": "RS",
+  "trilha": "COBOL",
+  "situacao": "ATIVO",
+  "data": "20260701"
+ }
+,
+ {
+  "codigo": "00008",
+  "nome": "HENRIQUE DIAS",
+  "uf": "PE",
+  "trilha": "JCL",
+  "situacao": "ATIVO",
+  "data": "20260701"
+ }
+,
+ {
+  "codigo": "00009",
+  "nome": "ISABELA MOURA",
+  "uf": "CE",
+  "trilha": "DB2",
+  "situacao": "ATIVO",
+  "data": "20260701"
+ }
+,
+ {
+  "codigo": "00010",
+  "nome": "JOAO PEREIRA",
+  "uf": "GO",
+  "trilha": "VSAM",
+  "situacao": "ATIVO",
+  "data": "20260701"
+ }
+ ]
+}
