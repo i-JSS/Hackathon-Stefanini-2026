@@ -1,0 +1,40 @@
+======================================================================
+RESENHA DO DESAFIO: SISTEMA FINANCEIRO FINANCE CORE
+Bootcamp Hackathon COBOL 2026
+João Antonio Ginuino Carvalho
+======================================================================
+
+1. O QUE EU FIZ
+----------------------------------------------------------------
+Desenvolvi uma solução COBOL Batch completa, desacoplada por arquivos. Implementei os dois programas principais, o BHCPH000 que gera a massa oficial e o BHCPH001 que é o motor financeiro, além de um subprograma de validação, o BHCSH001. Também criei 6 copybooks compartilhados entre eles (BHCCLIEN, BHCTRAXX, BHCEXTXX, BHCLOGXX, BHCPARAM, BHCJSONX) para não ficar repetindo layout de arquivo em cada programa.
+
+Fiz questão de o BHCPH000 nunca chamar o BHCPH001 diretamente. A comunicação entre os dois é 100% via arquivo LINE SEQUENTIAL em disco, do jeito que um batch mainframe real conversaria entre steps. Já no BHCPH001, deleguei toda a regra de negócio (cliente existe, ativo, tipo de transação, valor, saldo) para o BHCSH001, via CALL e LINKAGE SECTION. Fiz isso para manter o programa principal enxuto e a validação isolada, então dá pra reaproveitar essa regra em outro lugar sem duplicar código.
+
+2. ESTRUTURA DE PASTAS E MAKEFILE
+----------------------------------------------------------------
+Organizei o projeto em 4 pastas, cada uma mapeada numa variável do Makefile. Em src/ (SRC) coloquei os fontes .cbl (BHCPH000, BHCPH001, BHCSH001). Em copybooks/ (COPY) fiquei com os copybooks compartilhados. Em bin/ (BIN) ficam os executáveis e o objeto BHCSH001.o gerados na compilação. E output/ (OUT) é a pasta onde os programas efetivamente rodam e onde os arquivos de dados (.txt e .json) são lidos e gravados.
+
+Separei bin/ de output/ de propósito. bin/ guarda artefato de compilação, é binário. output/ guarda artefato de execução, é dado. Assim eu evito misturar código compilado com massa gerada em tempo de execução, e ainda consigo limpar cada um de forma independente quando preciso.
+
+No alvo compile, fiz o Makefile limpar tudo antes (clean), recriar bin/ e output/, compilar o BHCPH000 como executável (-x), compilar o BHCSH001 só como objeto (-c, porque ele é subprograma e nunca roda sozinho) e por fim compilar o BHCPH001 já linkando o BHCSH001.o. É esse link que faz o CALL BHCSH001 funcionar dentro do BHCPH001. Deixei os alvos BHCPH000, BHCPH001 e run sempre dependentes de compile, assim nunca corro o risco de rodar um binário desatualizado. Também entro na pasta output/ antes de executar, porque os SELECT usam caminho relativo tipo 'BHCFHCLI.txt', então se rodar de fora de output/ os arquivos iam parar no lugar errado. O alvo run automatiza a sequência oficial do desafio, primeiro o BHCPH000 e depois o BHCPH001.
+
+3. DECISÕES ARQUITETURAIS
+----------------------------------------------------------------
+- Separei as responsabilidades de propósito: quem lê e grava arquivo fica no programa principal, quem valida regra de negócio fica isolado no subprograma. Fiz assim porque isso permite trocar a fonte de dados no futuro (arquivo, DB2, CICS) sem tocar em nada da validação.
+- Automatizei a compilação com um Makefile multiplataforma (Windows, Linux e Mac), separando bin/ dos executáveis e output/ dos dados gerados, com o make run reproduzindo o fluxo oficial na ordem certa, BHCPH000 antes do BHCPH001.
+- Coloquei FILE STATUS próprio nos 5 arquivos (CLI, TRA, EXT, LOG, JSN) e validei tudo numa SECTION dedicada, a 810000-VALIDAR-FS, usando EVALUATE. Qualquer código fora do esperado aciona a 800000-TRATAR-ERRO, que imprime programa, arquivo, operação e o status antes de encerrar com GOBACK. Ou seja, capturei e tratei todas as exceções de I/O previstas no desafio (00, 10, 35, 37, 39, 41, 42, 46, 47, 48, 49 e OTHER), não deixei nenhuma passar batido.
+- Conferi o diagrama de arquitetura direto contra o código fonte pra ter certeza de que bate tudo. O fluxo BHCPH000 gerando BHCFHCLI e BHCFHTRA, o BHCPH001 lendo esses arquivos, chamando o BHCSH001 e gerando BHCFHEXT, BHCFHLOG e BHCFHJSN confere exatamente com os SELECT/ASSIGN TO e o CALL que estão nos fontes .cbl.
+
+4. JCL, DB2 E CICS (NÍVEL CONCEITUAL, NÃO OBRIGATÓRIO)
+----------------------------------------------------------------
+O desafio deixa claro que esses três temas não precisam virar código, só contexto conceitual. Vou explicar de um jeito simples como cada um se encaixaria no meu projeto.
+ 
+- JCL: no mainframe, é o JCL quem manda o z/OS executar os programas COBOL, um atrás do outro, na ordem certa. No meu projeto, quem faz esse papel hoje é o Makefile: ele garante que o BHCPH000 rode antes do BHCPH001. Se fosse rodar num z/OS de verdade, essa orquestração sairia do Makefile e passaria a ser feita pelo JCL, chamando cada programa como um step do job.
+ 
+- DB2: é o banco de dados relacional da IBM, onde os dados ficam guardados em tabelas em vez de arquivo sequencial. Hoje meu BHCPH001 lê o cadastro de clientes e as transações de arquivos LINE SEQUENTIAL. Se fosse usar DB2, esses dois arquivos virariam tabelas, e no lugar de OPEN/READ eu usaria comandos EXEC SQL como SELECT, INSERT, UPDATE e DELETE, com host variables do COBOL recebendo os dados através do INTO. Pra ler vários clientes eu usaria um cursor, com DECLARE CURSOR e FETCH, do mesmo jeito que hoje eu leio o arquivo num laço. E, no lugar de checar o FILE STATUS, eu checaria o SQLCODE depois de cada comando SQL.
+ 
+- CICS: é o ambiente do mainframe que permite rodar programas de forma online, atendendo uma transação por vez, ao contrário do batch que processa tudo de uma vez só. Meu projeto é 100% batch, mas se precisasse de algo como consultar o saldo de um cliente na hora, esse pedaço do sistema poderia virar uma transação CICS rodando ao lado do batch, sem precisar mexer no que já existe.
+
+5. CONCLUSÃO
+----------------------------------------------------------------
+Entreguei tudo que o edital pediu e ainda fui além. Capturei todas as exceções de I/O, isolei a regra de negócio num subprograma testável, automatizei o build com um Makefile multiplataforma bem documentado, e ainda pensei uma reflexão de arquitetura mostrando como esse mesmo desenho evolui pra um ambiente mainframe real com JCL, DB2 e CICS.
